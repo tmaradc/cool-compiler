@@ -12,11 +12,11 @@ import ply.lex as lex
 tokens = [ 
     'STRING',
     'PLUS','MINUS','TIMES','DIVIDE',
-    'COLON', 'ASSIGNMENT', 'DOT', 'COMMA', 'SEMICOLON', 'AT',
+    'COLON', 'ASSIGNMENT', 'ARROW', 'DOT', 'COMMA', 'SEMICOLON', 'AT',
     'TILDE', 'LESSTHAN', 'LESSOREQUAL', 'EQUALS',
     'LBRACKET','RBRACKET','LPAREN','RPAREN',
     'TRUE', 'FALSE',
-    'ID', 'TYPE', 'INTEGER', 'WHITE_SPACE'
+    'ID', 'TYPE', 'SELF_TYPE', 'SELF', 'INTEGER', 'WHITE_SPACE'
 ]
 
 reserved_words = {
@@ -36,30 +36,12 @@ reserved_words = {
     "esac": "ESAC",
     "new": "NEW",
     "of": "OF",
-    "not": "NOT",
-    "SELF_TYPE": "SELF_TYPE",
-    "self": "SELF"
+    "not": "NOT"
 }
 
 tokens = tokens + list(reserved_words.values())
 
 ## Regex for tokens
-
-def t_COMMENT(t):
-    r'\(\*(.|\n)*?\*\)'
-    pass
-
-def t_COMMENT_INLINE(t):
-    r'--.*\n?'
-    pass
-
-def t_STRING(t):
-    r'".*((\\\n)|.)*"'
-    #print(t.value)
-    return t
-
-#t_STRING  = r'".*((\\\n)|.)*"'
-
 t_PLUS    = r'\+'
 t_MINUS   = r'-'
 t_TIMES   = r'\*'
@@ -67,6 +49,7 @@ t_DIVIDE  = r'/'
 
 t_COLON  = r':'
 t_ASSIGNMENT = r'<-'
+t_ARROW = r'=>'
 t_DOT = r'\.' 
 t_COMMA = r','
 t_SEMICOLON = r';'
@@ -82,6 +65,19 @@ t_RBRACKET = r'\}'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 
+def t_COMMENT(t):
+    r'\(\*(.|\n)*?\*\)'
+    pass
+
+def t_COMMENT_INLINE(t):
+    r'--.*\n?'
+    pass
+
+def t_STRING(t):
+    r'".*((\\\n)|.)*"'
+    #print(t.value)
+    return t
+
 def t_TRUE(t):
     r't(r|R)(u|U)(e|E)'
     t.type = "TRUE"
@@ -94,7 +90,11 @@ def t_FALSE(t):
 
 def t_ID(t):
     r'[a-zA-Z][a-zA-Z_0-9]*'
-    if t.value.lower() in reserved_words:
+    if t.value=="SELF_TYPE":
+        t.type = "SELF_TYPE"
+    elif t.value=="self":
+        t.type = "SELF"
+    elif t.value.lower() in reserved_words:
         t.type = reserved_words[t.value.lower()]
     elif t.value[0].isupper():
         t.type = "TYPE"
@@ -115,13 +115,14 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-
+## Build the lexer
 arq_name = sys.argv[1]
 f = open(arq_name, "r")
 
 lexer = lex.lex()
 lexer.input(f.read())
 
+## Print all LexToken
 while True:
     tok = lexer.token()
     if not tok: 
