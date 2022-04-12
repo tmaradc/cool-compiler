@@ -74,7 +74,7 @@ def t_COMMENT_INLINE(t):
     pass
 
 def t_STRING(t):
-    r'".*((\\\n)|.)*"'
+    r'"[^"\0\n]*((\\\n)|[^"\0\n])*"'
     #print(t.value)
     return t
 
