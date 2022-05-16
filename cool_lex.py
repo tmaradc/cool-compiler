@@ -75,7 +75,7 @@ def t_COMMENT_INLINE(t):
 
 def t_STRING(t):
     r'"[^"\0\n]*((\\\n)|[^"\0\n])*"'
-    #print(t.value)
+    t.type = "STRING"
     return t
 
 def t_TRUE(t):
@@ -116,15 +116,15 @@ def t_error(t):
     t.lexer.skip(1)
 
 ## Build the lexer
-arq_name = sys.argv[1]
-f = open(arq_name, "r")
+# arq_name = sys.argv[1]
+# f = open(arq_name, "r")
 
 lexer = lex.lex()
-lexer.input(f.read())
+#lexer.input(f.read())
 
 ## Print all LexToken
-while True:
-    tok = lexer.token()
-    if not tok: 
-        break
-    print(tok)
+#while True:
+#    tok = lexer.token()
+#    if not tok: 
+#        break
+#    print(tok)
