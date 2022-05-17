@@ -16,7 +16,7 @@ tokens = [
     'TILDE', 'LESSTHAN', 'LESSOREQUAL', 'EQUALS',
     'LBRACKET','RBRACKET','LPAREN','RPAREN',
     'TRUE', 'FALSE',
-    'ID', 'TYPE', 'SELF_TYPE', 'SELF', 'INTEGER', 'WHITE_SPACE'
+    'ID', 'TYPE', 'SELF', 'INTEGER', 'WHITE_SPACE'
 ]
 
 reserved_words = {
@@ -91,7 +91,7 @@ def t_FALSE(t):
 def t_ID(t):
     r'[a-zA-Z][a-zA-Z_0-9]*'
     if t.value=="SELF_TYPE":
-        t.type = "SELF_TYPE"
+        t.type = "TYPE"
     elif t.value=="self":
         t.type = "SELF"
     elif t.value.lower() in reserved_words:
@@ -115,16 +115,5 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-## Build the lexer
-# arq_name = sys.argv[1]
-# f = open(arq_name, "r")
 
 lexer = lex.lex()
-#lexer.input(f.read())
-
-## Print all LexToken
-#while True:
-#    tok = lexer.token()
-#    if not tok: 
-#        break
-#    print(tok)

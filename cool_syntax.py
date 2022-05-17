@@ -1,22 +1,7 @@
 import sys
 from cool_lex import tokens
+from Node_ast import Node
 import ply.yacc as yacc
-
-class Node:
-    def __init__(self,type,children=None,leaf=None, ):
-          self.type = type
-          if children:
-               self.children = children
-          else:
-               self.children = [ ]
-          self.leaf = leaf
-
-    def __str__(self, level=0):
-        ret = "\t"*level+self.type+"/"+str(self.leaf)+"\n"
-        for child in self.children:
-            ret += child.__str__(level+1)
-        return ret
-
 
 precedence = (
     ('right','ASSIGNMENT'),
@@ -32,7 +17,6 @@ precedence = (
 
 ID = {}
 TYPE = set()
-
 
 
 ## PROGRAM --------------------------------------------------------------------
@@ -114,11 +98,7 @@ def p_expression_assignent(p):
 
 def p_expression_id(p):
     ''' expression : ID '''
-    try:
-        p[0] = Node("ID", leaf=p[1])
-        ID[p[1]]
-    except LookupError:
-        print("Undefined id '%s'" % p[1])
+    p[0] = Node("ID", leaf=p[1])
 
 def p_expression_integer(p):
     ''' expression : INTEGER '''
@@ -218,7 +198,7 @@ def p_expression_while(p):
 ### Sufix
 def p_expression_new(p):
     '''expression : NEW TYPE'''
-    p[0] = Node("new", children=[p[2]], leaf=p[1])
+    p[0] = Node("new", leaf=p[2])
 
 def p_expression_isvoid(p):
     '''expression : ISVOID expression'''
@@ -251,21 +231,45 @@ def p_action_expr(p):
     p[0] = Node("case_action_" + p[3], children=[p[5]], leaf=p[1])
 
 
+### LET
+def p_expression_let(p):
+    ''' expression : LET let_params IN expression '''
+    p[0] = Node("let", children=p[2]+[p[4]], leaf="let")
+
+def p_let_params(p):
+    ''' let_params : let_params COMMA inner_let
+                   | inner_let '''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1] + [p[3]]
+
+def p_inner_let(p):
+    '''
+    inner_let : ID COLON TYPE ASSIGNMENT expression
+              | ID COLON TYPE
+    '''
+    children = []
+    if len(p) == 6:
+        children = [p[5]]
+    p[0] = Node("inner_let_"+p[3], children=children, leaf=p[1])
 
 
+## OTHER --------------------------------------------------------------------
 def p_empty(p):
     ''' empty : '''
     p[0] = None
 
 def p_error(p):
-    print("Syntax error at '%s'" % p.value)
+    print("Syntax error! Line: {}, position: {}, character: {}, type: {}".format(p.lineno, p.lexpos, p.value, p.type))
 
 
-
+## Parse
 arq_name = sys.argv[1]
 f = open(arq_name, "r")
 
 parser = yacc.yacc()
 root = parser.parse(f.read())
 
+# Print abstract syntax tree (AST) 
 print(root)
