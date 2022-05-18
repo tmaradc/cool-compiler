@@ -108,8 +108,13 @@ def t_INTEGER(t):
     return t
 
 def t_WHITE_SPACE(t):
-    r'\n|\f|\r|\t|\v|\ ' 
+    r'\f|\r|\t|\v|\ ' 
     pass
+
+# Define a rule so we can track line numbers
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])

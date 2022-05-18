@@ -26,6 +26,6 @@ pip install ply
 
 Generate and print abstract syntax tree (AST)
 ```console
-python cool_lex.py cool_files/cool.cl
+python cool_syntax.py cool_files/cool.cl
 ```
     
