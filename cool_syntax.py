@@ -1,6 +1,6 @@
 import sys
 from cool_lex import tokens
-from Node_ast import Node
+from AST import *
 import ply.yacc as yacc
 
 precedence = (
@@ -15,14 +15,11 @@ precedence = (
     ('left','DOT'),
 )
 
-ID = {}
-TYPE = set()
-
 
 ## PROGRAM --------------------------------------------------------------------
 def p_program(p):
     '''program : classes '''
-    p[0] = Node("program", children=p[1], leaf="program")
+    p[0] = Program(classes=p[1])
 
 def p_classes(p):
     '''classes : classes class SEMICOLON
@@ -36,14 +33,12 @@ def p_classes(p):
 ## CLASS --------------------------------------------------------------------
 def p_class(p):
     '''class : CLASS TYPE LBRACKET features_opt RBRACKET '''
-    TYPE.add(p[2])
-    p[0] = Node("class", children=p[4], leaf=p[2])
+    p[0] = Class(name=p[2], features=p[4])
 
 def p_class_inherits(p):
     '''class : CLASS TYPE INHERITS TYPE LBRACKET features_opt RBRACKET'''
-    TYPE.add(p[2])
     # Verifico se o tipo da classe pai existe no programa??
-    p[0] = Node("class_" + p[4], children=p[6], leaf=p[2])
+    p[0] = Class(name=p[2], features=p[6], inherits=p[4])
 
 def p_features_opt(p):
     '''features_opt : features
@@ -62,19 +57,19 @@ def p_features(p):
 ## FEATURE --------------------------------------------------------------------
 def p_feature_method(p):
     ''' feature : ID LPAREN formal_params RPAREN COLON TYPE LBRACKET expression RBRACKET '''
-    p[0] = Node("feature_method_" + p[6], children=p[3]+[p[8]], leaf=p[1])
+    p[0] = FeatureMethod(name=p[1], return_type=p[6], expression=p[8], formal_params=p[3])
 
 def p_feature_method_no_formals(p):
     ''' feature : ID LPAREN RPAREN COLON TYPE LBRACKET expression RBRACKET '''
-    p[0] = Node("feature_method_"+ p[5], children=[p[7]], leaf=p[1])
+    p[0] = FeatureMethod(name=p[1], return_type=p[5], expression=p[7])
 
 def p_feature_attr_initialized(p):
     ''' feature : ID COLON TYPE ASSIGNMENT expression '''
-    p[0] = Node("feature_attr_" + p[3], children=[p[5]], leaf=p[1])
+    p[0] = FeatureAttr(name=p[1], type=p[3], init=p[5])
 
 def p_feature_attr(p):
     ''' feature : ID COLON TYPE '''
-    p[0] = Node("feature_attr_" + p[3], leaf=p[1])
+    p[0] = FeatureAttr(name=p[1], type=p[3])
 
 def p_formal_params(p):
     ''' formal_params : formal_params COMMA formal
@@ -88,43 +83,43 @@ def p_formal_params(p):
 ## FORMAL --------------------------------------------------------------------
 def p_formal(p):
     ''' formal : ID COLON TYPE '''
-    p[0] = Node("formal_"+p[3], leaf=p[1])
+    p[0] = Formal(name=p[1], type=p[3])
 
 
 ## EXPR --------------------------------------------------------------------
-def p_expression_assignent(p):
+def p_expression_assignment(p):
     'expression : ID ASSIGNMENT expression'
-    p[0] = Node("assignment", children=[p[3]], leaf=p[1])
+    p[0] = Assignment(ID=p[1], expression=p[3])
 
 def p_expression_id(p):
     ''' expression : ID '''
-    p[0] = Node("ID", leaf=p[1])
+    p[0] = ID(name=p[1])
 
 def p_expression_integer(p):
     ''' expression : INTEGER '''
-    p[0] = Node("integer", leaf=p[1])
+    p[0] = Integer(value=p[1])
 
 def p_expression_string(p):
     ''' expression : STRING '''
-    p[0] = Node("string", leaf=p[1])
+    p[0] = String(value=p[1])
 
 def p_expression_true(p):
     ''' expression : TRUE '''
-    p[0] = Node("true", leaf=p[1])
+    p[0] = Boolean(value=p[1])
 
 def p_expression_false(p):
     ''' expression : FALSE '''
-    p[0] = Node("false", leaf=p[1])
+    p[0] = Boolean(value=p[1])
 
 def p_expression_self(p):
     ''' expression : SELF '''
-    p[0] = Node("self", leaf=p[1])
+    p[0] = Self()
 
 
 ### { block }
 def p_expression_block(p):
     ''' expression : LBRACKET block_expr RBRACKET '''
-    p[0] = Node("block", children=p[2], leaf="block")
+    p[0] = Block(expressions=p[2])
 
 def p_block_expr(p):
     ''' block_expr : block_expr expression SEMICOLON
@@ -138,7 +133,7 @@ def p_block_expr(p):
 ### (expr).ID(args) - ID(args) - expr@TYPE.ID(args)
 def p_expression_access(p):
     ''' expression : expression DOT ID LPAREN arguments_opt RPAREN '''
-    p[0] = Node("expr_method_access", children=[p[1]] + p[5], leaf=p[3])
+    p[0] = MethodAccess(instance=p[1], method=p[3], arguments=p[5])
 
 def p_arguments_opt(p):
     ''' arguments_opt : arguments
@@ -155,11 +150,11 @@ def p_arguments(p):
 
 def p_expression_access_at_type(p):
     ''' expression : expression AT TYPE DOT ID LPAREN arguments_opt RPAREN '''
-    p[0] = Node("expr_at_method_access", children=[p[1], p[2], p[3]] + p[7], leaf=p[5])
+    p[0] = AtMethodAccess(instance=p[1], type=p[3], method=p[5], arguments=p[7])
 
 def p_expression_self_dispatch(p):
     ''' expression : ID LPAREN arguments_opt RPAREN '''
-    p[0] = Node("self_access", children=p[3], leaf=p[1])
+    p[0] = SelfMethodAccess(method=p[1], arguments=p[3])
 
 
 ### Math
@@ -168,7 +163,7 @@ def p_expression_binop(p):
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression'''
-    p[0] = Node("binop", children=[p[1],p[3]], leaf=p[2])
+    p[0] = MathBinop(operation=p[2], expression_left=p[1], expression_right=p[3])
 
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
@@ -180,43 +175,43 @@ def p_expression_compare(p):
     '''expression : expression LESSTHAN expression
                   | expression LESSOREQUAL expression
                   | expression EQUALS expression'''
-    p[0] = Node("compare", children=[p[1],p[3]], leaf=p[2])
+    p[0] = Comparison(operation=p[2], expression_left=p[1], expression_right=p[3])
 
 
 ### IF
 def p_expression_if(p):
     ''' expression : IF expression THEN expression ELSE expression FI '''
-    p[0] = Node("condition", children=[p[2], p[4], p[6]], leaf="IF")
+    p[0] = IF(condition=p[2], condition_true=p[4], condition_false=p[6])
 
 
 ### While
 def p_expression_while(p):
     ''' expression : WHILE expression LOOP expression POOL '''
-    p[0] = Node("loop", children=[p[2], p[4]], leaf="while")
+    p[0] = While(condition=p[2], body=p[4])
 
 
 ### Sufix
 def p_expression_new(p):
     '''expression : NEW TYPE'''
-    p[0] = Node("new", leaf=p[2])
+    p[0] = New(type=p[2])
 
 def p_expression_isvoid(p):
     '''expression : ISVOID expression'''
-    p[0] = Node("isvoid", children=[p[2]], leaf=p[1])
+    p[0] = IsVoid(expression=p[2])
 
 def p_expression_tilde(p):
     '''expression : TILDE expression'''
-    p[0] = Node("tilde", children=[p[2]], leaf=p[1])
+    p[0] = Tilde(expression=p[2])
 
 def p_expression_not(p):
     '''expression : NOT expression'''
-    p[0] = Node("not", children=[p[2]], leaf=p[1])
+    p[0] = Not(expression=p[2])
 
 
 ### CASE
 def p_expression_case(p):
     ''' expression : CASE expression OF actions ESAC '''
-    p[0] = Node("case", children=[p[2]] + p[4], leaf="case")
+    p[0] = Case(expression=p[2], actions=p[4])
 
 def p_actions(p):
     ''' actions : actions action
@@ -228,13 +223,13 @@ def p_actions(p):
 
 def p_action_expr(p):
     ''' action : ID COLON TYPE ARROW expression SEMICOLON '''
-    p[0] = Node("case_action_" + p[3], children=[p[5]], leaf=p[1])
+    p[0] = CaseAction(name=p[1], type=p[3], expression=p[5])
 
 
 ### LET
 def p_expression_let(p):
     ''' expression : LET let_params IN expression '''
-    p[0] = Node("let", children=p[2]+[p[4]], leaf="let")
+    p[0] = Let(params=p[2], expression=p[4])
 
 def p_let_params(p):
     ''' let_params : let_params COMMA inner_let
@@ -249,10 +244,10 @@ def p_inner_let(p):
     inner_let : ID COLON TYPE ASSIGNMENT expression
               | ID COLON TYPE
     '''
-    children = []
+    children = None
     if len(p) == 6:
-        children = [p[5]]
-    p[0] = Node("inner_let_"+p[3], children=children, leaf=p[1])
+        children = p[5]
+    p[0] = InnerLet(name=p[1], type=p[3], expression=children)
 
 
 ## OTHER --------------------------------------------------------------------
