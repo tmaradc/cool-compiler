@@ -1,6 +1,6 @@
 import sys
 from cool_lex import tokens
-from AST import *
+from cool_semantic import *
 import ply.yacc as yacc
 
 precedence = (
@@ -267,4 +267,7 @@ parser = yacc.yacc()
 root = parser.parse(f.read())
 
 # Print abstract syntax tree (AST) 
-print(root)
+#print(root)
+
+semantic_analysis(root)
+print("OK")

@@ -30,7 +30,7 @@ class Class(AST):
         return ret
 
 class FeatureMethod(AST):
-    def __init__(self, name, return_type, expression, formal_params=None):
+    def __init__(self, name, return_type, expression, formal_params=[]):
         super().__init__("feature_method")
         self.name = name
         self.return_type = return_type
@@ -43,7 +43,8 @@ class FeatureMethod(AST):
         if self.formal_params:
             for child in self.formal_params:
                 ret += child.__str__(level+1)
-        ret += self.expression.__str__(level+1)
+        if self.expression:
+            ret += self.expression.__str__(level+1)
         return ret
 
 class FeatureAttr(AST):
@@ -51,7 +52,7 @@ class FeatureAttr(AST):
         super().__init__("feature_attr")
         self.name = name
         self.type = type
-        self.init = init
+        self.init = init #expression
 
     def __str__(self, level=0):
         ret = "\t"*level+"Attr_"+self.name+"/"+self.type+"\n"
@@ -142,7 +143,7 @@ class Block(Expression):
         return ret
 
 class MethodAccess(Expression):
-    def __init__(self, instance, method, arguments=None):
+    def __init__(self, instance, method, arguments=[]):
         super().__init__("method_access")
         self.instance = instance
         self.method = method
@@ -159,7 +160,7 @@ class MethodAccess(Expression):
         return ret
 
 class AtMethodAccess(Expression):
-    def __init__(self, instance, type, method, arguments=None):
+    def __init__(self, instance, type, method, arguments=[]):
         super().__init__("at_method_access")
         self.instance = instance
         self.type = type
@@ -177,7 +178,7 @@ class AtMethodAccess(Expression):
         return ret
 
 class SelfMethodAccess(Expression):
-    def __init__(self, method, arguments=None):
+    def __init__(self, method, arguments=[]):
         super().__init__("self_method_access")
         self.method = method
         self.arguments = arguments
@@ -344,5 +345,4 @@ class InnerLet(Expression):
             ret += "\t"*level+"Expression\n"
             ret += self.expression.__str__(level+1)
         return ret
-
         

@@ -4,7 +4,6 @@
 # tokenizer for the cool language
 # ------------------------------------------------------------
 
-import sys
 import ply.lex as lex
 
 ## Tokens
