@@ -50,7 +50,7 @@ bool_class.scopeMethods.update(object_class.scopeMethods)
 ## ---------------------------------------------------------------------------------------------
 
 ## key: child ; value: parent
-inheritance = {"IO": "Object"}
+inheritance = {"IO": "Object", "Int": "Object", "Bool": "Object", "String": "Object"}
 
 types = {"Object": object_class,
          "IO": IO_class,
@@ -223,7 +223,9 @@ def expression(ast_node, scopeMethods, scopeAttr, currentClass):
         expression(ast_node.expression,scopeMethods, scopeAttr, currentClass)
         actions_types = []
         for action in ast_node.actions:
-            actions_types.append(expression(action.expression, scopeMethods, dict(scopeAttr).update({action.name: action}), currentClass))
+            copyScope = dict(scopeAttr)
+            copyScope.update({action.name: action})
+            actions_types.append(expression(action.expression, scopeMethods, copyScope, currentClass))
         
         return_type = ""
         for i in range(len(actions_types)-1):
@@ -350,11 +352,14 @@ class ClassSemantics():
     def __init__(self, ast_node):
         self.parentScopeMethods = {}
         self.parentScopeAttr = {}
+        self.ast_node = ast_node
 
         if ast_node.name in types:
             error('{0} has already been defined'.format(ast_node.name))
         if ast_node.inherits and ast_node.inherits not in types:
             error('{0} is not defined'.format(ast_node.inherits))
+        if ast_node.inherits in ["Bool", "String", "Int"]:
+            error('classes cannot inherit from "{0}"'.format(ast_node.inherits))
         if ast_node.inherits:
             self.addInheritance(ast_node.name, ast_node.inherits)
         if ast_node.name == "Main":
@@ -380,8 +385,10 @@ class ClassSemantics():
         (self.parentScopeAttr).update(scopeFeaturesAttr)
         ast_node.scopeMethods = self.parentScopeMethods
         types[ast_node.name] = ast_node
-        for feature in ast_node.features:
-            FeatureSemantics(feature, self.parentScopeMethods, self.parentScopeAttr, ast_node.name)
+
+    def featuresCheck(self):
+        for feature in self.ast_node.features:
+            FeatureSemantics(feature, self.parentScopeMethods, self.parentScopeAttr, self.ast_node.name)
 
     #Is it possible to have a cycle??
     def verifyCycle(self, parent: String, new_type: String):
@@ -413,9 +420,12 @@ class ClassSemantics():
 
 
 def semantic_analysis(ast_node: AST):
+    classesRules = []
     if ast_node.identifier == "program":
         for class_program in ast_node.classes:
-            ClassSemantics(class_program)
+            classesRules.append(ClassSemantics(class_program))
+        for class_rule in classesRules:
+            class_rule.featuresCheck()
 
     if not hasMainClassWithMainMethod:
         error("the program must have a class Main with a main method defined")
