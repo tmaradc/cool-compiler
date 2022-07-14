@@ -1,0 +1,244 @@
+{
+  "functions": [
+    {
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        }
+      ],
+      "instrs": [
+        {
+          "dest": "inc",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "dest": "v1",
+          "op": "const",
+          "type": "int",
+          "value": 8
+        },
+        {
+          "args": [
+            "this",
+            "inc"
+          ],
+          "dest": "this1",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this1",
+            "v1"
+          ],
+          "op": "store"
+        },
+        {
+          "args": [
+            "inc"
+          ],
+          "op": "ret"
+        }
+      ],
+      "name": "print_Article",
+      "type": "int"
+    },
+    {
+      "instrs": [
+        {
+          "dest": "inc",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "dest": "v",
+          "op": "const",
+          "type": "int",
+          "value": 1000
+        },
+        {
+          "dest": "max",
+          "op": "const",
+          "type": "int",
+          "value": 1000000
+        },
+        {
+          "dest": "count",
+          "op": "const",
+          "type": "int",
+          "value": 0
+        },
+        {
+          "args": [
+            "v"
+          ],
+          "dest": "pi",
+          "op": "alloc",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "v"
+          ],
+          "dest": "pp",
+          "op": "alloc",
+          "type": {
+            "ptr": {
+              "ptr": "int"
+            }
+          }
+        },
+        {
+          "label": "lbl"
+        },
+        {
+          "args": [
+            "count",
+            "inc"
+          ],
+          "dest": "count",
+          "op": "add",
+          "type": "int"
+        },
+        {
+          "args": [
+            "pp",
+            "pi"
+          ],
+          "op": "store"
+        },
+        {
+          "args": [
+            "pp"
+          ],
+          "dest": "pi",
+          "op": "load",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "count",
+            "max"
+          ],
+          "dest": "loop",
+          "op": "ge",
+          "type": "bool"
+        },
+        {
+          "args": [
+            "loop"
+          ],
+          "labels": [
+            "end",
+            "lbl"
+          ],
+          "op": "br"
+        },
+        {
+          "label": "end"
+        },
+        {
+          "args": [
+            "pi"
+          ],
+          "op": "free"
+        },
+        {
+          "args": [
+            "pp"
+          ],
+          "op": "free"
+        },
+        {
+          "dest": "size_article",
+          "op": "const",
+          "type": "int",
+          "value": 2
+        },
+        {
+          "args": [
+            "size_article"
+          ],
+          "dest": "a_book",
+          "op": "alloc",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "a_book"
+          ],
+          "dest": "retorno",
+          "funcs": [
+            "print_Article"
+          ],
+          "op": "call",
+          "type": "int"
+        },
+        {
+          "args": [
+            "count"
+          ],
+          "op": "print"
+        },
+        {
+          "args": [
+            "retorno"
+          ],
+          "op": "print"
+        },
+        {
+          "dest": "inc",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "args": [
+            "a_book",
+            "inc"
+          ],
+          "dest": "this1",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this1"
+          ],
+          "dest": "v0",
+          "op": "load",
+          "type": "int"
+        },
+        {
+          "args": [
+            "v0"
+          ],
+          "op": "print"
+        },
+        {
+          "args": [
+            "a_book"
+          ],
+          "op": "free"
+        }
+      ],
+      "name": "main"
+    }
+  ]
+}

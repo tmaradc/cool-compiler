@@ -1,4 +1,5 @@
 from ast import arguments
+from code_generation import generate_code
 from AST import *
 
 # BASIC CLASSES
@@ -58,6 +59,14 @@ types = {"Object": object_class,
          "String": string_class,
          "Bool": bool_class}
 
+#To generate the bril code
+class_attr_ordered = {
+    "IO":{
+        "scopeAttrList": [],
+        "classMethods": {"out_int": out_int},
+    }
+}
+
 hasMainClassWithMainMethod = False
 
 def error(message):
@@ -76,9 +85,10 @@ def mainRule(ast_node):
 def inheritancePathTilObject(type):
     path = [type]
     while type != "Object":
-        path.append(types[type])
-        type = types[type]
+        path.append(inheritance[type])
+        type = inheritance[type]
     path.append("Object")
+    return path
 
 def least_parent(type1, type2):
     if type1 == type2:
@@ -237,7 +247,9 @@ def expression(ast_node, scopeMethods, scopeAttr, currentClass):
         for param in ast_node.params:
             letScope.update({param.name: param})
             if param.expression:
-                expression(param.expression,scopeMethods, letScope, currentClass)
+                return_type_param = expression(param.expression,scopeMethods, letScope, currentClass)
+                if invalidType(return_type_param, param.type, currentClass):
+                    error('type "{0}" is not assignable to type "{1}"'.format(return_type_param, param.type))
 
         return_body_type = expression(ast_node.expression,scopeMethods, letScope, currentClass)
         return return_body_type
@@ -352,6 +364,8 @@ class ClassSemantics():
     def __init__(self, ast_node):
         self.parentScopeMethods = {}
         self.parentScopeAttr = {}
+        self.scopeAttrList = []
+        self.classMethodsList = []
         self.ast_node = ast_node
 
         if ast_node.name in types:
@@ -374,11 +388,20 @@ class ClassSemantics():
                     error('method "{0}" is multiply defined in class "{1}"'.format(feature.name, ast_node.name))
                 else:
                     scopeFeaturesMethods[feature.name] = feature
+                    self.classMethodsList.append(feature.name)
             if feature.identifier=="feature_attr":
                 if feature.name in scopeFeaturesAttr or feature.name in self.parentScopeAttr:
                     error('property "{0}" is multiply defined in class "{1}"'.format(feature.name, ast_node.name))
                 else:
                     scopeFeaturesAttr[feature.name] = feature
+                    if  feature.type == "Int":
+                        self.scopeAttrList.append(feature.name)
+        
+        #To generate code
+        class_attr_ordered[ast_node.name] = {
+            "scopeAttrList": self.scopeAttrList,
+            "classMethods": scopeFeaturesMethods,
+        }
 
         #Override parents methods if has the same name
         (self.parentScopeMethods).update(scopeFeaturesMethods)
@@ -408,19 +431,24 @@ class ClassSemantics():
 
     def addParentScopes(self, parent):
         #recursive
-        ast_parent = types[parent] 
+        ast_parent = types[parent]
+        if parent!="Object":
+            self.addParentScopes(inheritance[parent]) 
         for feature in ast_parent.features:
             if feature.identifier=="feature_method":
                 self.parentScopeMethods[feature.name] = feature
             if feature.identifier=="feature_attr":
                 self.parentScopeAttr[feature.name] = feature
-        if parent!="Object":
-            self.addParentScopes(inheritance[parent])
+                if  feature.type == "Int":
+                    self.scopeAttrList.append(feature.name)
 
 
 
-def semantic_analysis(ast_node: AST):
+def semantic_analysis(ast_node: AST, arq_name):
     classesRules = []
+    if ast_node == None:
+        return
+
     if ast_node.identifier == "program":
         for class_program in ast_node.classes:
             classesRules.append(ClassSemantics(class_program))
@@ -430,3 +458,4 @@ def semantic_analysis(ast_node: AST):
     if not hasMainClassWithMainMethod:
         error("the program must have a class Main with a main method defined")
 
+    generate_code(types, inheritance, class_attr_ordered, arq_name)

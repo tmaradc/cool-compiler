@@ -1,0 +1,443 @@
+{
+  "functions": [
+    {
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "name": "number",
+          "type": "int"
+        }
+      ],
+      "instrs": [
+        {
+          "args": [
+            "number"
+          ],
+          "op": "print"
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ],
+      "name": "IO_out_int"
+    },
+    {
+      "name": "Book_initBook",
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "name": "title_p",
+          "type": "int"
+        },
+        {
+          "name": "author_p",
+          "type": "int"
+        }
+      ],
+      "type": {
+        "ptr": "int"
+      },
+      "instrs": [
+        {
+          "dest": "temp0",
+          "op": "const",
+          "type": "int",
+          "value": 0
+        },
+        {
+          "args": [
+            "this",
+            "temp0"
+          ],
+          "dest": "this1",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this1",
+            "title_p"
+          ],
+          "op": "store"
+        },
+        {
+          "dest": "temp1",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "args": [
+            "this",
+            "temp1"
+          ],
+          "dest": "this2",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this2",
+            "author_p"
+          ],
+          "op": "store"
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ]
+    },
+    {
+      "name": "Book_print",
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        }
+      ],
+      "type": {
+        "ptr": "int"
+      },
+      "instrs": [
+        {
+          "dest": "temp1",
+          "op": "const",
+          "type": "int",
+          "value": 0
+        },
+        {
+          "args": [
+            "this",
+            "temp1"
+          ],
+          "dest": "this1",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this1"
+          ],
+          "dest": "load1",
+          "op": "load",
+          "type": "int"
+        },
+        {
+          "args": [
+            "this",
+            "load1"
+          ],
+          "dest": "temp0",
+          "funcs": [
+            "IO_out_int"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "dest": "temp3",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "args": [
+            "this",
+            "temp3"
+          ],
+          "dest": "this3",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this3"
+          ],
+          "dest": "load3",
+          "op": "load",
+          "type": "int"
+        },
+        {
+          "args": [
+            "this",
+            "load3"
+          ],
+          "dest": "temp2",
+          "funcs": [
+            "IO_out_int"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ]
+    },
+    {
+      "name": "Article_initArticle",
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "name": "title_p",
+          "type": "int"
+        },
+        {
+          "name": "author_p",
+          "type": "int"
+        },
+        {
+          "name": "per_title_p",
+          "type": "int"
+        }
+      ],
+      "type": {
+        "ptr": "int"
+      },
+      "instrs": [
+        {
+          "args": [
+            "this",
+            "title_p",
+            "author_p"
+          ],
+          "dest": "temp0",
+          "funcs": [
+            "Book_initBook"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "dest": "temp1",
+          "op": "const",
+          "type": "int",
+          "value": 2
+        },
+        {
+          "args": [
+            "this",
+            "temp1"
+          ],
+          "dest": "this2",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this2",
+            "per_title_p"
+          ],
+          "op": "store"
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ]
+    },
+    {
+      "name": "Article_print",
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        }
+      ],
+      "type": {
+        "ptr": "int"
+      },
+      "instrs": [
+        {
+          "args": [
+            "this"
+          ],
+          "dest": "temp0",
+          "funcs": [
+            "Book_print"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "dest": "temp2",
+          "op": "const",
+          "type": "int",
+          "value": 2
+        },
+        {
+          "args": [
+            "this",
+            "temp2"
+          ],
+          "dest": "this2",
+          "op": "ptradd",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this2"
+          ],
+          "dest": "load2",
+          "op": "load",
+          "type": "int"
+        },
+        {
+          "args": [
+            "this",
+            "load2"
+          ],
+          "dest": "temp1",
+          "funcs": [
+            "IO_out_int"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ]
+    },
+    {
+      "name": "main",
+      "args": [],
+      "type": {
+        "ptr": "int"
+      },
+      "instrs": [
+        {
+          "dest": "integer1",
+          "op": "const",
+          "type": "int",
+          "value": 100
+        },
+        {
+          "dest": "integer2",
+          "op": "const",
+          "type": "int",
+          "value": 7
+        },
+        {
+          "dest": "integer3",
+          "op": "const",
+          "type": "int",
+          "value": 10
+        },
+        {
+          "dest": "sizenew4",
+          "op": "const",
+          "type": "int",
+          "value": 3
+        },
+        {
+          "args": [
+            "sizenew4"
+          ],
+          "dest": "new4",
+          "op": "alloc",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "new4",
+            "integer1",
+            "integer2",
+            "integer3"
+          ],
+          "dest": "temp0",
+          "funcs": [
+            "Article_initArticle"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "temp0"
+          ],
+          "dest": "a_book",
+          "op": "id"
+        },
+        {
+          "args": [
+            "a_book"
+          ],
+          "dest": "temp5",
+          "funcs": [
+            "Book_print"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "temp5"
+          ],
+          "op": "ret"
+        }
+      ]
+    }
+  ]
+}

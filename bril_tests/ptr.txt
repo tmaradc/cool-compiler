@@ -1,0 +1,36 @@
+
+@print_Article(this: ptr<int>) : int {
+  inc: int = const 1;
+  v1: int = const 8;
+  this1: ptr<int> = ptradd this inc;
+  store this1 v1;
+  ret inc;
+}
+
+@main {
+  inc: int = const 1;
+  v: int = const 1000;
+  max: int = const 1000000;
+  count: int = const 0;
+  pi: ptr<int> = alloc v;
+  pp: ptr<ptr<int>> = alloc v;
+.lbl:
+  count: int = add count inc;
+  store pp pi;
+  pi: ptr<int> = load pp;
+  loop: bool = ge count max;
+  br loop .end .lbl;
+.end:
+  free pi;
+  free pp;
+  size_article: int = const 2;
+  a_book: ptr<int> = alloc size_article;
+  retorno: int = call @print_Article a_book;
+  print count;
+  print retorno;
+  inc: int = const 1;
+  this1: ptr<int> = ptradd a_book inc;
+  v0: int = load this1;
+  print v0;
+  free a_book;
+}

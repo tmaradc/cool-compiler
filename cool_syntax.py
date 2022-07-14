@@ -269,5 +269,5 @@ root = parser.parse(f.read())
 # Print abstract syntax tree (AST) 
 #print(root)
 
-semantic_analysis(root)
+semantic_analysis(root, arq_name)
 print("OK")

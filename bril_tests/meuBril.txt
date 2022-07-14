@@ -1,0 +1,49 @@
+@IO_out_int(this: ptr<int>, number: int): ptr<int> {
+  print number;
+  ret this;
+}
+@Book_initBook(this: ptr<int>, title_p: int, author_p: int): ptr<int> {
+  temp0: int = const 0;
+  this1: ptr<int> = ptradd this temp0;
+  store this1 title_p;
+  temp1: int = const 1;
+  this2: ptr<int> = ptradd this temp1;
+  store this2 author_p;
+  ret this;
+}
+@Book_print(this: ptr<int>): ptr<int> {
+  temp1: int = const 0;
+  this1: ptr<int> = ptradd this temp1;
+  load1: int = load this1;
+  temp0: ptr<int> = call @IO_out_int this load1;
+  temp3: int = const 1;
+  this3: ptr<int> = ptradd this temp3;
+  load3: int = load this3;
+  temp2: ptr<int> = call @IO_out_int this load3;
+  ret this;
+}
+@Article_initArticle(this: ptr<int>, title_p: int, author_p: int, per_title_p: int): ptr<int> {
+  temp0: ptr<int> = call @Book_initBook this title_p author_p;
+  temp1: int = const 2;
+  this2: ptr<int> = ptradd this temp1;
+  store this2 per_title_p;
+  ret this;
+}
+@Article_print(this: ptr<int>): ptr<int> {
+  temp0: ptr<int> = call @Book_print this;
+  temp2: int = const 2;
+  this2: ptr<int> = ptradd this temp2;
+  load2: int = load this2;
+  temp1: ptr<int> = call @IO_out_int this load2;
+  ret this;
+}
+@main {
+  sizenew0: int = const 3;
+  new0: ptr<int> = alloc sizenew0;
+  integer2: int = const 100;
+  integer3: int = const 7;
+  integer4: int = const 10;
+  temp1: ptr<int> = call @Article_initArticle new0 integer2 integer3 integer4;
+  a_book = id temp1;
+  temp5: ptr<int> = call @Book_print a_book;
+}
