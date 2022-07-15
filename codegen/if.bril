@@ -1,0 +1,165 @@
+{
+  "functions": [
+    {
+      "args": [
+        {
+          "name": "this",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "name": "number",
+          "type": "int"
+        }
+      ],
+      "instrs": [
+        {
+          "args": [
+            "number"
+          ],
+          "op": "print"
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "ret"
+        }
+      ],
+      "name": "IO_out_int",
+      "type": {
+        "ptr": "int"
+      }
+    },
+    {
+      "name": "main",
+      "args": [],
+      "instrs": [
+        {
+          "dest": "size",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "args": [
+            "size"
+          ],
+          "dest": "this",
+          "op": "alloc",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "dest": "bool0",
+          "op": "const",
+          "type": "bool",
+          "value": false
+        },
+        {
+          "args": [
+            "bool0"
+          ],
+          "dest": "cond",
+          "op": "id"
+        },
+        {
+          "label": "condIf1"
+        },
+        {
+          "args": [
+            "cond"
+          ],
+          "labels": [
+            "left1",
+            "right1"
+          ],
+          "op": "br"
+        },
+        {
+          "label": "left1"
+        },
+        {
+          "dest": "integer3",
+          "op": "const",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "args": [
+            "this",
+            "integer3"
+          ],
+          "dest": "temp2",
+          "funcs": [
+            "IO_out_int"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "temp2"
+          ],
+          "dest": "retIf1",
+          "op": "id"
+        },
+        {
+          "labels": [
+            "exitIf1"
+          ],
+          "op": "jmp"
+        },
+        {
+          "label": "right1"
+        },
+        {
+          "dest": "integer5",
+          "op": "const",
+          "type": "int",
+          "value": 2
+        },
+        {
+          "args": [
+            "this",
+            "integer5"
+          ],
+          "dest": "temp4",
+          "funcs": [
+            "IO_out_int"
+          ],
+          "op": "call",
+          "type": {
+            "ptr": "int"
+          }
+        },
+        {
+          "args": [
+            "temp4"
+          ],
+          "dest": "retIf1",
+          "op": "id"
+        },
+        {
+          "labels": [
+            "exitIf1"
+          ],
+          "op": "jmp"
+        },
+        {
+          "label": "exitIf1"
+        },
+        {
+          "args": [
+            "this"
+          ],
+          "op": "free"
+        }
+      ]
+    }
+  ]
+}

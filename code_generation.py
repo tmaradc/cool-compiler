@@ -1,7 +1,5 @@
 import json
 
-#liberar memória, while e if 
-
 types_per_class = {}
 memory_to_free = []
 lets = {}
@@ -15,18 +13,165 @@ def classMethod(method, class_attr_ordered, currentClass, inheritance):
         return currentClass, class_attr_ordered[currentClass]['classMethods'][method].return_type
     return classMethod(method, class_attr_ordered, inheritance[currentClass], inheritance)
 
+def typeBril(typeCool):
+    if typeCool=="Int":
+        return "int"
+    elif typeCool=="Bool":
+        return "bool"
+    else:
+        return {"ptr": "int"}
+
+def freeMemory():
+    return [{"args": [var],"op": "free"} for var in memory_to_free]
+
+def mainThis():
+    inst = [
+            {
+                "dest": "size",
+                "op": "const",
+                "type": "int",
+                "value": 1
+            },
+            {
+                "args": [
+                    "size"
+                ],
+                "dest": "this",
+                "op": "alloc",
+                "type": {
+                    "ptr": "int"
+                }
+            }
+        ]
+    memory_to_free.append("this")
+    return inst
 
 def expressionToInstruction(expression, class_attr_ordered, currentClass, inheritance, instructions):
+    def whileBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
+        global cont
+        number = str(cont)
+        cont += 1
+        instructions += [
+            {
+                "label": "while_cond" + number
+            }
+        ]
+        condition, instructions, typeAuxCond = expressionToInstruction(expression.condition, class_attr_ordered, currentClass, inheritance, instructions)
+        instructions += [
+            {
+                "args": [
+                    condition
+                ],
+                "labels": [
+                    "while_body" + number,
+                    "while_finish" + number
+                ],
+                "op": "br"
+            },
+            {
+                "label": "while_body" + number
+            }
+        ]
+        body, instructions, typeAux = expressionToInstruction(expression.body, class_attr_ordered, currentClass, inheritance, instructions)
+        instructions += [
+            {
+                "labels": [
+                    "while_cond" + number
+                ],
+                "op": "jmp"
+            },
+            {
+                "label": "while_finish" + number
+            },
+        ]
+        return condition, instructions, typeAuxCond
+
+    def ifBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
+        global cont
+        number = str(cont)
+        cont += 1
+        instructions += [
+            {
+                "label": "condIf" + number
+            }
+        ]
+        condition, instructions, typeAux = expressionToInstruction(expression.condition, class_attr_ordered, currentClass, inheritance, instructions)
+        instructions += [
+            {
+                "args": [
+                    condition
+                ],
+                "labels": [
+                    "left" + number,
+                    "right" + number
+                ],
+                "op": "br"
+            },
+            {
+                "label": "left" + number
+            }]
+        
+        var, instructions, typeAux = expressionToInstruction(expression.condition_true, class_attr_ordered, currentClass, inheritance, instructions)
+
+        instructions += [
+            {
+                "args": [
+                    var
+                ],
+                "dest": "retIf" + number,
+                "op": "id"
+            },
+            {
+                "labels": [
+                    "exitIf" + number
+                ],
+                "op": "jmp"
+            },
+            {
+                "label": "right" + number
+            }
+        ]
+
+        var, instructions, typeAux = expressionToInstruction(expression.condition_false, class_attr_ordered, currentClass, inheritance, instructions)
+        instructions += [
+            {
+                "args": [
+                    var
+                ],
+                "dest": "retIf" + number,
+                "op": "id"
+            },
+            {
+                "labels": [
+                    "exitIf" + number
+                ],
+                "op": "jmp"
+            },
+            {
+                "label": "exitIf" + number
+            }
+        ]
+        return "retIf" + number, instructions, typeAux
+
     def letBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
         for param in expression.params:
-            if param.type == "Int" and not param.expression:
-                instructions += [{
-                        "dest": param.name,
-                        "op": "const",
-                        "type": "int",
-                        "value": 0 
-                    }]
-                lets[param.name] = "Int"
+            if param.type in ["Int", "Bool"] and not param.expression:
+                if param.type == "Int":
+                    instructions += [{
+                            "dest": param.name,
+                            "op": "const",
+                            "type": "int",
+                            "value": 0 
+                        }]
+                    lets[param.name] = "Int"
+                else:
+                    instructions += [{
+                            "dest": param.name,
+                            "op": "const",
+                            "type": "bool",
+                            "value": False
+                        }]
+                    lets[param.name] = "Bool"
             else:
                 if param.expression:
                     var, instructions, typeAux = expressionToInstruction(param.expression, class_attr_ordered, currentClass, inheritance, instructions)
@@ -115,7 +260,7 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
         instructions += inst
         return return_var, instructions, expression.type
 
-    def idBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
+    def idBril(expression, class_attr_ordered, currentClass, inheritance, instructions): 
         global cont
         if expression.name in class_attr_ordered[currentClass]['scopeAttrList']:
             temp_var = "temp" + str(cont)
@@ -166,6 +311,19 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
         }
         instructions.append(inst)
         return return_var, instructions, "Int"
+    
+    def booleanBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
+        global cont
+        return_var = "bool" + str(cont)
+        cont += 1
+        inst = {
+            "dest": return_var,
+            "op": "const",
+            "type": "bool",
+            "value": True if expression.value=="true" else False
+        }
+        instructions.append(inst)
+        return return_var, instructions, "Bool"
 
     def selfMethodAccessBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
         global cont
@@ -184,7 +342,7 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
             class_method + "_" + expression.method
           ],
           "op": "call",
-          "type": {"ptr": "int"} if return_type != "Int" else "int"
+          "type": typeBril(return_type)
         }
         instructions.append(inst)
         return return_var, instructions, return_type
@@ -192,7 +350,6 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
     def methodAccessBril(expression, class_attr_ordered, currentClass, inheritance, instructions):
         global cont
         argThis, instructions, typeAux = expressionToInstruction(expression.instance, class_attr_ordered, currentClass, inheritance, instructions)
-        #Não é a currentClass aqui ... é o tipo do argThis (COMO SABER????)
         class_method, return_type = classMethod(expression.method, class_attr_ordered, typeAux, inheritance)
         return_var = "temp" + str(cont)
         cont += 1
@@ -208,7 +365,7 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
             class_method + "_" + expression.method
           ],
           "op": "call",
-          "type": {"ptr": "int"} if return_type != "Int" else "int"
+          "type": typeBril(return_type)
         }
         instructions.append(inst)
         return return_var, instructions, return_type
@@ -232,7 +389,7 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
             expression.type + "_" + expression.method
           ],
           "op": "call",
-          "type": {"ptr": "int"} if return_type != "Int" else "int"
+          "type": typeBril(return_type)
         }
         instructions.append(inst)
         return return_var, instructions, return_type
@@ -257,6 +414,8 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
         return idBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
     if expression.identifier == "integer":
         return integerBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
+    if expression.identifier == "boolean":
+        return booleanBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
     if expression.identifier == "new":
         return newBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
     if expression.identifier == "self":
@@ -265,6 +424,10 @@ def expressionToInstruction(expression, class_attr_ordered, currentClass, inheri
         return blockBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
     if expression.identifier == "let":
         return letBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
+    if expression.identifier == "if":
+        return ifBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
+    if expression.identifier == "while":
+        return whileBril(expression, class_attr_ordered, currentClass, inheritance, instructions)
 
 
 
@@ -312,16 +475,16 @@ def generate_code(types, inheritance, class_attr_ordered, arq_name):
             }
             method = {
                 "name": cool_class + "_" + feature.name,
-                "args": thisArg() + [{"name": formal.name, "type": ("int" if formal.type=="Int" else {"ptr": "int"})} 
+                "args": thisArg() + [{"name": formal.name, "type": typeBril(formal.type)} 
                                                 for formal in feature.formal_params],
-                "type": "int" if feature.return_type=="Int" else {"ptr": "int"},
+                "type": typeBril(feature.return_type),
                 "instrs": instructions + [retBril]
             }
             if feature.name=="main" and cool_class=="Main":
                 method = {
                     "name": "main",
                     "args": [],
-                    "instrs": instructions
+                    "instrs": mainThis() + instructions + freeMemory()
                 }
 
             functions.append(method)
